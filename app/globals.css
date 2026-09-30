@@ -24,3 +24,10 @@
 .adminModal{width:min(760px,100%)}
 .eyebrow.dark{color:#5b2a86}
 @media(max-width:700px){.adminCalendar{display:grid;overflow-x:auto;grid-template-columns:repeat(7,minmax(135px,1fr))}.adminCalendar .day,.adminCalendar .dow{min-width:135px}}
+
+/* V9: remove the long This Month agenda list on phones only */
+@media (max-width: 700px) {
+  .mobileHideAgenda {
+    display: none !important;
+  }
+}
