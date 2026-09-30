@@ -34,7 +34,6 @@
 
 /* V9 FIXED mobile layout: true month calendar, no long agenda list */
 @media (max-width:700px) {
-  .mobileAgenda { display:none !important; }
 
   .calendar {
     display:grid !important;
