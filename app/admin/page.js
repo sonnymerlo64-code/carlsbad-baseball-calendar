@@ -109,7 +109,7 @@ export default function AdminPage(){
         return <div className={`day ${dayBreaks.length?'breakday':''}`} key={ds}>
           <div className="adminDayHead"><span className="num">{day}</span><button type="button" className="dayAdd" onClick={()=>add(ds)}>+</button></div>
           {dayBreaks.map(b=><div className="miniBreak" key={String(b.id)}>{b.title}</div>)}
-          {dayEvents.map(ev=><button type="button" key={String(ev.id)} onClick={()=>edit(ev)} className={`event team-${cls(ev.team)} type-${cls(ev.event_type)}`}><span className="eventteam">{ev.team}</span><span>{time12(ev.time)}</span><strong>{ev.event_name||ev.opponent||'Event'}</strong><em>{ev.event_type}</em></button>)}
+          {dayEvents.map(ev=><button type="button" key={String(ev.id)} onClick={()=>edit(ev)} className={`event team-${cls(ev.team)} type-${cls(ev.event_type)}`}><span className="eventteam">{ev.team}</span><span>{time12(ev.time)}</span><strong>{ev.event_type==='Game' ? (ev.opponent||ev.event_name||'Game') : (ev.event_name||ev.opponent||'Event')}</strong><em>{ev.event_type}</em></button>)}
         </div>;
       })}
     </div>
