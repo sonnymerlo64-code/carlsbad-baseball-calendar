@@ -1,0 +1,2 @@
+import {NextResponse} from 'next/server';import {COOKIE,makeToken} from '../../../lib/auth';
+export async function POST(req){const b=await req.json();if(!process.env.ADMIN_PASSWORD||b.password!==process.env.ADMIN_PASSWORD)return NextResponse.json({error:'Incorrect password'},{status:401});const r=NextResponse.json({ok:true});r.cookies.set(COOKIE,makeToken(),{httpOnly:true,sameSite:'lax',secure:process.env.NODE_ENV==='production',path:'/',maxAge:60*60*24*30});return r}

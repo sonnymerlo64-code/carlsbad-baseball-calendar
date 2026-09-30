@@ -1,0 +1,1 @@
+import './globals.css';export const metadata={title:'Carlsbad Baseball Calendar',description:'Carlsbad High School Baseball schedule'};export default function RootLayout({children}){return <html lang="en"><body><header><div className="brand"><div><h1>CARLSBAD BASEBALL</h1><small>Lancers Schedule</small></div><div>⚾</div></div></header>{children}</body></html>}
