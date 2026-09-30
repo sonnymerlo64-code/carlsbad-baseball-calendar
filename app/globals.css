@@ -18,3 +18,18 @@
 /* V7 Coach Admin calendar editor */
 .adminHero{align-items:center}.adminAdd{background:#fff;color:var(--purple-dark);font-weight:900}.adminDay{position:relative}.dayAdd{position:absolute;right:6px;top:5px;width:22px;height:22px;padding:0;border-radius:50%;background:#ececf0;color:#555;font-size:16px;line-height:22px;opacity:0}.adminDay:hover .dayAdd{opacity:1}.adminCalendar .event:hover{outline:2px solid #5b2a86;outline-offset:1px}.adminModal{width:min(760px,100%)}.adminModal .field label{font-size:12px;font-weight:800;color:#444}.adminFormActions{align-items:center}.eyebrow.dark{color:var(--purple);margin-bottom:3px}
 @media(max-width:700px){.adminCalendar{display:grid;overflow-x:auto;grid-template-columns:repeat(7,minmax(125px,1fr));border-radius:8px}.adminCalendar .dow,.adminCalendar .day{min-width:125px}.adminWrap{overflow-x:hidden}.adminHero{align-items:flex-start}.adminHero .adminAdd{display:none}.dayAdd{opacity:1}.adminModal{max-height:94%;padding:16px}}
+
+/* V8 Admin Calendar */
+.adminPage .calendar{display:grid}
+.adminDayHead{display:flex;align-items:center;justify-content:space-between}
+.dayAdd{width:24px;height:24px;min-width:24px;padding:0;border-radius:6px;background:#ededf0;color:#3d175f;font-size:18px;line-height:1}
+.adminEditor{margin-top:18px;scroll-margin-top:16px}
+.editorTitle{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.editorTitle h2{margin:2px 0 0}
+.eyebrow.dark{color:#5b2a86}
+.adminCalendar .event{border-top:0;border-right:0;border-bottom:0}
+@media(max-width:700px){
+  .adminPage .adminCalendar{display:grid;overflow-x:auto;grid-template-columns:repeat(7,minmax(135px,1fr))}
+  .adminPage .adminCalendar .day,.adminPage .adminCalendar .dow{min-width:135px}
+  .adminToolbar{position:static;flex-wrap:wrap}
+}
