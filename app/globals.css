@@ -15,21 +15,12 @@
 .legend{display:flex;gap:16px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);padding:9px 13px;border-radius:10px;margin:-5px 0 14px;font-size:12px;font-weight:700}.legend span{display:flex;align-items:center;gap:6px}.dot{width:10px;height:10px;border-radius:50%;display:inline-block}.dot.varsity{background:#5b167f}.dot.jv{background:#111}.dot.frosh{background:#8c8c92}.dot.combo{background:#4c4c52}.dot.all{background:#c7c7cc}.breakBanner{background:#171719;color:white;border-left:7px solid #5b167f;border-radius:10px;padding:11px 15px;margin:8px 0;display:flex;align-items:center;gap:12px}.breakBanner b{font-size:15px}.breakBanner span{color:#d0d0d4;font-size:12px}.breakBanner small{margin-left:auto;color:#fff;font-weight:800}.breakday{background:#f1eef4}.miniBreak{margin-top:5px;padding:4px 5px;background:#29292e;color:#fff;border-radius:4px;font-size:9px;font-weight:800;text-transform:uppercase}.event em{display:block;font-style:normal;font-size:8px;text-transform:uppercase;color:#777;margin-top:2px;letter-spacing:.4px}.event.type-practice{background:#fafafa}.event.type-game{font-weight:600}.event.type-tournament{box-shadow:inset 0 0 0 1px #bbb}.event.type-tryout{background:#e9e9ec}.event.type-camp{background:#f2f2f3}.event.type-travel{background:#e9e4ed}.typepill{display:inline-flex;margin-left:7px;font-size:10px;font-weight:900;text-transform:uppercase;padding:4px 7px;border-radius:999px;background:#ececef;color:#444}.adminlogo{width:90px;height:90px;object-fit:contain;display:block;margin:0 auto 10px}.adminrow{padding:10px 0;border-bottom:1px solid #e4e7ec;display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap}
 @media(max-width:700px){.legend{gap:9px}.breakBanner{align-items:flex-start;flex-direction:column;gap:3px}.breakBanner small{margin-left:0}.calendar{display:none}}
 
-/* V7 Coach Admin calendar editor */
-.adminHero{align-items:center}.adminAdd{background:#fff;color:var(--purple-dark);font-weight:900}.adminDay{position:relative}.dayAdd{position:absolute;right:6px;top:5px;width:22px;height:22px;padding:0;border-radius:50%;background:#ececf0;color:#555;font-size:16px;line-height:22px;opacity:0}.adminDay:hover .dayAdd{opacity:1}.adminCalendar .event:hover{outline:2px solid #5b2a86;outline-offset:1px}.adminModal{width:min(760px,100%)}.adminModal .field label{font-size:12px;font-weight:800;color:#444}.adminFormActions{align-items:center}.eyebrow.dark{color:var(--purple);margin-bottom:3px}
-@media(max-width:700px){.adminCalendar{display:grid;overflow-x:auto;grid-template-columns:repeat(7,minmax(125px,1fr));border-radius:8px}.adminCalendar .dow,.adminCalendar .day{min-width:125px}.adminWrap{overflow-x:hidden}.adminHero{align-items:flex-start}.adminHero .adminAdd{display:none}.dayAdd{opacity:1}.adminModal{max-height:94%;padding:16px}}
 
-/* V8 Admin Calendar */
-.adminPage .calendar{display:grid}
+/* V8.1 Coach Admin */
+.adminCalendar{display:grid}
 .adminDayHead{display:flex;align-items:center;justify-content:space-between}
 .dayAdd{width:24px;height:24px;min-width:24px;padding:0;border-radius:6px;background:#ededf0;color:#3d175f;font-size:18px;line-height:1}
-.adminEditor{margin-top:18px;scroll-margin-top:16px}
-.editorTitle{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
-.editorTitle h2{margin:2px 0 0}
+.adminCalendar .event:hover{outline:2px solid #5b2a86;outline-offset:1px}
+.adminModal{width:min(760px,100%)}
 .eyebrow.dark{color:#5b2a86}
-.adminCalendar .event{border-top:0;border-right:0;border-bottom:0}
-@media(max-width:700px){
-  .adminPage .adminCalendar{display:grid;overflow-x:auto;grid-template-columns:repeat(7,minmax(135px,1fr))}
-  .adminPage .adminCalendar .day,.adminPage .adminCalendar .dow{min-width:135px}
-  .adminToolbar{position:static;flex-wrap:wrap}
-}
+@media(max-width:700px){.adminCalendar{display:grid;overflow-x:auto;grid-template-columns:repeat(7,minmax(135px,1fr))}.adminCalendar .day,.adminCalendar .dow{min-width:135px}}
