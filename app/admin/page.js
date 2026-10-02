@@ -25,7 +25,7 @@ export default function AdminPage(){
   const [events,setEvents]=useState([]);
   const [banners,setBanners]=useState([]);
   const [message,setMessage]=useState('');
-  const [month,setMonth]=useState(new Date(2026,8,1));
+  const [month,setMonth]=useState(()=>{const n=new Date();return new Date(n.getFullYear(),n.getMonth(),1)});
   const [filter,setFilter]=useState('All');
   const [open,setOpen]=useState(false);
   const [editId,setEditId]=useState(null);
@@ -106,7 +106,7 @@ export default function AdminPage(){
         const ds=`${prefix}-${String(day).padStart(2,'0')}`;
         const dayEvents=visible.filter(ev=>d(ev.date)===ds);
         const dayBreaks=banners.filter(b=>d(b.start_date)<=ds&&d(b.end_date)>=ds);
-        return <div className={`day ${dayBreaks.length?'breakday':''}`} key={ds}>
+        const now=new Date(),isToday=now.getFullYear()===y&&now.getMonth()===mo&&now.getDate()===day; return <div className={`day ${dayBreaks.length?'breakday ':''}${isToday?'today':''}`} key={ds}>
           <div className="adminDayHead"><span className="num">{day}</span><button type="button" className="dayAdd" onClick={()=>add(ds)}>+</button></div>
           {dayBreaks.map(b=><div className="miniBreak" key={String(b.id)}>{b.title}</div>)}
           {dayEvents.map(ev=><button type="button" key={String(ev.id)} onClick={()=>edit(ev)} className={`event team-${cls(ev.team)} type-${cls(ev.event_type)}`}><span className="eventteam">{ev.team}</span><span>{time12(ev.time)}</span><strong>{ev.event_type==='Game' ? (ev.opponent||ev.event_name||'Game') : (ev.event_name||ev.opponent||'Event')}</strong><em>{ev.event_type}</em></button>)}
