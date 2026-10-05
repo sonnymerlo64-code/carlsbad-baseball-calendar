@@ -17,6 +17,7 @@ function time12(v){
   const ap=h>=12?'PM':'AM'; h=h%12||12;
   return `${h}:${min} ${ap}`;
 }
+function localDateKey(n){return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`}
 function cls(v){ return String(v||'all').toLowerCase().replace(/\//g,'-').replace(/\s+/g,'-'); }
 
 export default function AdminPage(){
@@ -26,21 +27,27 @@ export default function AdminPage(){
   const [banners,setBanners]=useState([]);
   const [message,setMessage]=useState('');
   const [month,setMonth]=useState(()=>{const n=new Date();return new Date(n.getFullYear(),n.getMonth(),1)});
-  const [today,setToday]=useState(()=>new Date());
+  const [todayKey,setTodayKey]=useState(()=>localDateKey(new Date()));
   useEffect(()=>{
     const refreshToday=()=>{
-      const n=new Date();
-      setToday(n);
-      setMonth(prev=>{
-        const wasCurrent=prev.getFullYear()===today.getFullYear()&&prev.getMonth()===today.getMonth();
-        return wasCurrent ? new Date(n.getFullYear(),n.getMonth(),1) : prev;
+      const n=new Date(), nextKey=localDateKey(n);
+      setTodayKey(prevKey=>{
+        if(prevKey!==nextKey){
+          setMonth(prev=>{
+            const [py,pm]=prevKey.split('-').map(Number);
+            const wasCurrent=prev.getFullYear()===py&&prev.getMonth()===pm-1;
+            return wasCurrent ? new Date(n.getFullYear(),n.getMonth(),1) : prev;
+          });
+        }
+        return nextKey;
       });
     };
+    refreshToday();
     const timer=setInterval(refreshToday,30000);
     window.addEventListener('focus',refreshToday);
     document.addEventListener('visibilitychange',refreshToday);
     return ()=>{clearInterval(timer);window.removeEventListener('focus',refreshToday);document.removeEventListener('visibilitychange',refreshToday)};
-  },[today]);
+  },[]);
   const [filter,setFilter]=useState('All');
   const [open,setOpen]=useState(false);
   const [editId,setEditId]=useState(null);
@@ -121,7 +128,7 @@ export default function AdminPage(){
         const ds=`${prefix}-${String(day).padStart(2,'0')}`;
         const dayEvents=visible.filter(ev=>d(ev.date)===ds);
         const dayBreaks=banners.filter(b=>d(b.start_date)<=ds&&d(b.end_date)>=ds);
-        const isToday=today.getFullYear()===y&&today.getMonth()===mo&&today.getDate()===day; return <div className={`day ${dayBreaks.length?'breakday ':''}${isToday?'today':''}`} key={ds}>
+        const isToday=ds===todayKey; return <div data-date={ds} className={`day ${dayBreaks.length?'breakday ':''}${isToday?'today':''}`} key={ds}>
           <div className="adminDayHead"><span className="num">{day}</span><button type="button" className="dayAdd" onClick={()=>add(ds)}>+</button></div>
           {dayBreaks.map(b=><div className="miniBreak" key={String(b.id)}>{b.title}</div>)}
           {dayEvents.map(ev=><button type="button" key={String(ev.id)} onClick={()=>edit(ev)} className={`event team-${cls(ev.team)} type-${cls(ev.event_type)}`}><span className="eventteam">{ev.team}</span><span>{time12(ev.time)}</span><strong>{ev.event_type==='Game' ? (ev.opponent||ev.event_name||'Game') : (ev.event_name||ev.opponent||'Event')}</strong><em>{ev.event_type}</em></button>)}
