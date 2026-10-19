@@ -154,3 +154,5 @@
 /* V10.3: non-today cells can never inherit the Today marker */
 .calendar .day:not(.today){outline:0!important;box-shadow:none!important}
 .calendar .day:not(.today)>.num{background:transparent!important;color:#55555d!important;border-radius:0!important}
+
+.schoolResult{display:block;width:100%;text-align:left;padding:10px;margin:4px 0;border:1px solid #ddd;border-radius:8px;background:#f7f4fa;color:#222}.schoolResult strong,.schoolResult small{display:block}.schoolList{max-height:220px;overflow:auto}
