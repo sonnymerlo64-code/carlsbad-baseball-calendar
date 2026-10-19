@@ -156,3 +156,9 @@
 .calendar .day:not(.today)>.num{background:transparent!important;color:#55555d!important;border-radius:0!important}
 
 .schoolResult{display:block;width:100%;text-align:left;padding:10px;margin:4px 0;border:1px solid #ddd;border-radius:8px;background:#f7f4fa;color:#222}.schoolResult strong,.schoolResult small{display:block}.schoolList{max-height:220px;overflow:auto}
+
+/* V12: expanded public game details */
+.modalbox .addressline{display:block;margin-top:5px;font-weight:500;line-height:1.4;overflow-wrap:anywhere}
+.modalbox .directionsbtn{display:inline-flex;align-items:center;justify-content:center;background:#5b2a86;color:white;text-decoration:none;border-radius:8px;padding:11px 15px;font-size:13px;font-weight:700}
+.modalbox .detailgrid{max-height:55vh;overflow-y:auto}
+.modalbox .actions{display:flex;gap:8px;flex-wrap:wrap}
