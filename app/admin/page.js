@@ -52,6 +52,48 @@ export default function AdminPage(){
   const [open,setOpen]=useState(false);
   const [editId,setEditId]=useState(null);
   const [form,setForm]=useState(EMPTY);
+  const [practiceOpen,setPracticeOpen]=useState(false);
+  const [practiceMonth,setPracticeMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1));
+  const [practiceDates,setPracticeDates]=useState([]);
+  const [practiceTeams,setPracticeTeams]=useState(['Varsity']);
+  const [practiceTime,setPracticeTime]=useState('15:30');
+  const [practiceArrival,setPracticeArrival]=useState('');
+  const [practiceLocation,setPracticeLocation]=useState('Carlsbad High School');
+  const [practiceAddress,setPracticeAddress]=useState('3557 Lancer Way, Carlsbad, CA 92008');
+  const [practiceName,setPracticeName]=useState('Practice');
+  const [practiceNotes,setPracticeNotes]=useState('');
+  const [practiceSaving,setPracticeSaving]=useState(false);
+  const [practiceMessage,setPracticeMessage]=useState('');
+  const [templateDays,setTemplateDays]=useState([1,3,5]);
+  const [templateEnd,setTemplateEnd]=useState('');
+  const togglePracticeDate=(date)=>setPracticeDates(a=>a.includes(date)?a.filter(x=>x!==date):[...a,date].sort());
+  function addTemplate(){
+    if(!templateEnd){setPracticeMessage('Choose a template end date first.');return}
+    const start=localDateKey(practiceMonth);
+    if(templateEnd<start){setPracticeMessage('End date must be on or after the displayed month.');return}
+    const out=[];const cursor=new Date(start+'T12:00:00');const last=new Date(templateEnd+'T12:00:00');
+    for(let i=0;cursor<=last&&i<366;i++,cursor.setDate(cursor.getDate()+1)){if(templateDays.includes(cursor.getDay()))out.push(localDateKey(cursor))}
+    setPracticeDates(a=>[...new Set([...a,...out])].sort());setPracticeMessage(out.length+' template dates selected. Review and remove any unwanted dates before saving.');
+  }
+  function copyPracticeWeek(){
+    const first=localDateKey(practiceMonth);const base=new Date(first+'T12:00:00');const shift=(base.getDay()+6)%7;base.setDate(base.getDate()-shift);
+    const end=new Date(base);end.setDate(end.getDate()+6);
+    const picked=practiceDates.filter(x=>x>=localDateKey(base)&&x<=localDateKey(end));
+    if(!picked.length){setPracticeMessage('Select dates in the first displayed week before copying.');return}
+    const next=picked.map(x=>{const d=new Date(x+'T12:00:00');d.setDate(d.getDate()+7);return localDateKey(d)});
+    setPracticeDates(a=>[...new Set([...a,...next])].sort());setPracticeMessage('Copied '+next.length+' practice dates into the following week.');
+  }
+  const practiceConflicts=practiceDates.flatMap(date=>practiceTeams.flatMap(team=>events.filter(ev=>d(ev.date)===date&&(ev.team===team||ev.team==='All')&&ev.status!=='Canceled').map(ev=>({date,team,title:ev.event_name||ev.opponent||ev.event_type,time:ev.time||''}))));
+  async function savePractices(){
+    if(!practiceDates.length||!practiceTeams.length){setPracticeMessage('Choose practice dates and at least one team.');return}
+    setPracticeSaving(true);setPracticeMessage('');
+    try{
+      const r=await fetch('/api/practices/batch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dates:practiceDates,teams:practiceTeams,time:practiceTime,arrival_time:practiceArrival,location:practiceLocation,address:practiceAddress,name:practiceName,notes:practiceNotes})});
+      const x=await r.json();if(!r.ok)throw Error(x.error||'Could not save practices');
+      await load();setPracticeDates([]);setPracticeMessage('Created '+x.created+' practices.'+(x.skipped?.length?' Skipped '+x.skipped.length+' duplicates.':''));
+    }catch(e){setPracticeMessage(e.message)}finally{setPracticeSaving(false)}
+  }
+
   const [venues,setVenues]=useState([]);
   const [homeFields,setHomeFields]=useState([]);
   const [venueOpen,setVenueOpen]=useState(false);
@@ -149,7 +191,7 @@ export default function AdminPage(){
     <div className="toolbar">
       <div className="navgroup"><button type="button" className="iconbtn" onClick={()=>setMonth(new Date(y,mo-1,1))}>‹</button><div className="monthnav">{month.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</div><button type="button" className="iconbtn" onClick={()=>setMonth(new Date(y,mo+1,1))}>›</button></div>
       <div className="filtergroup"><select value={filter} onChange={e=>setFilter(e.target.value)}>{['All','Varsity','JV','Frosh','JV/Frosh'].map(x=><option key={x} value={x}>{x}</option>)}</select></div>
-      <button type="button" className="secondary" onClick={()=>{loadTeams();setLibraryOpen(true)}}>Manage HS Teams</button><button type="button" className="secondary" onClick={()=>{loadVenues();setVenueOpen(true)}}>Manage Venues</button><button type="button" onClick={()=>add('')}>+ Add Event</button><a className="btn secondary" href="/">Public View</a>
+      <button type="button" className="secondary" onClick={()=>{loadTeams();setLibraryOpen(true)}}>Manage HS Teams</button><button type="button" className="secondary" onClick={()=>{loadVenues();setVenueOpen(true)}}>Manage Venues</button><button type="button" className="secondary" onClick={()=>{setPracticeOpen(true);setPracticeMessage('')}}>+ Schedule Practices</button><button type="button" onClick={()=>add('')}>+ Add Event</button><a className="btn secondary" href="/">Public View</a>
     </div>
     <div className="legend"><span><i className="dot varsity"/>Varsity</span><span><i className="dot jv"/>JV</span><span><i className="dot frosh"/>Frosh</span><span><i className="dot combo"/>JV/Frosh</span><span><i className="dot all"/>All Levels</span></div>
     {monthBanners.map(b=><div className="breakBanner" key={String(b.id)}><b>{b.title}</b><span>{b.subtitle}</span></div>)}
@@ -179,6 +221,29 @@ export default function AdminPage(){
       <div className="field"><label>Search school addresses (Google Places)</label><input placeholder="Search high school name" value={query} onChange={e=>setQuery(e.target.value)}/>{lookupError?<p className="error">{lookupError}</p>:null}{results.map((t,i)=><button type="button" className="schoolResult" key={t.place_id||i} onClick={()=>{setSchool({...blankTeam,...t});setSchoolId(null);setResults([]);setQuery('')}}><strong>{t.name}</strong><small>{t.address}</small></button>)}</div>
       <form className="grid2" onSubmit={saveSchool}>{[['name','School Name'],['address','School Address'],['field_name','Baseball Field Name'],['field_address','Baseball Field Address (override)'],['notes','Notes']].map(([k,label])=><div className="field" key={k}><label>{label}</label><input value={school[k]||''} required={k==='name'} onChange={e=>setSchool(f=>({...f,[k]:e.target.value}))}/></div>)}<div className="actions full"><button type="submit">Save School</button>{schoolId?<button type="button" className="danger" onClick={deleteSchool}>Delete School</button>:null}<button type="button" className="secondary" onClick={()=>{setSchool(blankTeam);setSchoolId(null)}}>New School</button></div></form>
       <h3>Saved Schools ({teams.length})</h3><div className="schoolList">{teams.map(t=><button type="button" className="schoolResult" key={t.id} onClick={()=>{setSchool(t);setSchoolId(t.id)}}><strong>{t.name}</strong><small>{t.field_address||t.address||'No address'}</small></button>)}</div>
+    </div></div>:null}
+    {practiceOpen?<div className="modal" onClick={()=>setPracticeOpen(false)}><div className="modalbox adminModal" onClick={e=>e.stopPropagation()}>
+      <div className="modalhead"><div><div className="eyebrow dark">COACH ADMIN</div><h2>Flexible Practice Scheduler</h2></div><button type="button" className="closebtn" onClick={()=>setPracticeOpen(false)}>×</button></div>
+      <p className="muted">Select any combination of dates. There is no required weekly pattern. You can also add dates from a weekly template or copy a week, then adjust individual dates.</p>
+      <div className="field full"><label>Teams</label><div className="practiceTeamOptions">{LEVELS.filter(t=>t!=='All').map(team=><label key={team}><input type="checkbox" checked={practiceTeams.includes(team)} onChange={e=>setPracticeTeams(a=>e.target.checked?[...a,team]:a.filter(x=>x!==team))}/>{team}</label>)}</div></div>
+      <div className="practiceCalendarHeader"><button type="button" className="secondary" onClick={()=>setPracticeMonth(m=>new Date(m.getFullYear(),m.getMonth()-1,1))}>‹</button><strong>{practiceMonth.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</strong><button type="button" className="secondary" onClick={()=>setPracticeMonth(m=>new Date(m.getFullYear(),m.getMonth()+1,1))}>›</button></div>
+      <div className="practiceDateGrid">{['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((w,i)=><div key={i} className="practiceDow">{w}</div>)}{Array.from({length:new Date(practiceMonth.getFullYear(),practiceMonth.getMonth(),1).getDay()},(_,i)=><div key={'empty'+i}/>)}
+      {Array.from({length:new Date(practiceMonth.getFullYear(),practiceMonth.getMonth()+1,0).getDate()},(_,i)=>{const date=localDateKey(new Date(practiceMonth.getFullYear(),practiceMonth.getMonth(),i+1));return <button type="button" key={date} className={'practiceDate '+(practiceDates.includes(date)?'chosen':'')} onClick={()=>togglePracticeDate(date)}>{i+1}</button>})}</div>
+      <div className="practiceTools"><span>{practiceDates.length} dates selected</span><button type="button" className="secondary" onClick={()=>setPracticeDates([])}>Clear dates</button><button type="button" className="secondary" onClick={copyPracticeWeek}>Copy first week → next</button></div>
+      <div className="field"><label>Optional weekly template (select weekdays, then choose end date)</label><div className="practiceTeamOptions">{['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((w,i)=><label key={w}><input type="checkbox" checked={templateDays.includes(i)} onChange={e=>setTemplateDays(a=>e.target.checked?[...a,i]:a.filter(v=>v!==i))}/>{w}</label>)}</div><div className="practiceTools"><input type="date" value={templateEnd} onChange={e=>setTemplateEnd(e.target.value)}/><button type="button" className="secondary" onClick={addTemplate}>Add template dates</button></div></div>
+      <div className="grid2">
+        <div className="field"><label>Practice time</label><input type="time" value={practiceTime} onChange={e=>setPracticeTime(e.target.value)}/></div>
+        <div className="field"><label>Player arrival (optional)</label><input type="time" value={practiceArrival} onChange={e=>setPracticeArrival(e.target.value)}/></div>
+        <div className="field"><label>Practice name</label><input value={practiceName} onChange={e=>setPracticeName(e.target.value)}/></div>
+        <div className="field"><label>Saved venue (optional)</label><select value="" onChange={e=>{const v=venues.find(v=>String(v.id)===e.target.value);if(v){setPracticeLocation(v.name);setPracticeAddress(v.address)}}}><option value="">Select venue</option>{venues.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></div>
+        <div className="field"><label>Location / Field</label><input value={practiceLocation} onChange={e=>setPracticeLocation(e.target.value)}/></div>
+        <div className="field"><label>Street address</label><input value={practiceAddress} onChange={e=>setPracticeAddress(e.target.value)}/></div>
+        <div className="field full"><label>Notes</label><textarea rows="2" value={practiceNotes} onChange={e=>setPracticeNotes(e.target.value)}/></div>
+      </div>
+      {practiceConflicts.length?<div className="practiceWarning"><strong>Schedule review: {practiceConflicts.length} existing event(s) on selected team dates.</strong><div>{practiceConflicts.slice(0,12).map((c,i)=><div key={i}>{c.date} · {c.team}: {c.title}{c.time?' ('+time12(c.time)+')':''}</div>)}</div><small>Review before saving. These are date-level warnings, not confirmed time overlaps.</small></div>:null}
+      {practiceMessage?<p role="status">{practiceMessage}</p>:null}
+      <div className="actions"><button type="button" disabled={practiceSaving||!practiceDates.length||!practiceTeams.length} onClick={savePractices}>{practiceSaving?'Saving…':'Save '+(practiceDates.length*practiceTeams.length)+' Practices'}</button><button type="button" className="secondary" onClick={()=>setPracticeOpen(false)}>Close</button></div>
+      <p className="muted">Each saved practice is an individual calendar event, so you can edit, move, or cancel one practice without changing the others.</p>
     </div></div>:null}
     {open?<div className="modal"  onClick={()=>setOpen(false)}><div className="modalbox adminModal" onClick={e=>e.stopPropagation()}>
       <div className="modalhead"><div><div className="eyebrow dark">COACH ADMIN</div><h2>{editId?'Edit Event':'Add Event'}</h2></div><button type="button" className="closebtn" onClick={()=>setOpen(false)}>×</button></div>

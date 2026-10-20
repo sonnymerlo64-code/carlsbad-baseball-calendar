@@ -162,3 +162,14 @@
 .modalbox .directionsbtn{display:inline-flex;align-items:center;justify-content:center;background:#5b2a86;color:white;text-decoration:none;border-radius:8px;padding:11px 15px;font-size:13px;font-weight:700}
 .modalbox .detailgrid{max-height:55vh;overflow-y:auto}
 .modalbox .actions{display:flex;gap:8px;flex-wrap:wrap}
+
+.practiceCalendarHeader{display:flex;justify-content:center;align-items:center;gap:16px;margin:14px 0}
+.practiceDateGrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.practiceDow{text-align:center;font-size:12px;font-weight:700;color:#5d5364}
+.practiceDate{min-height:37px;border:1px solid #ddd;border-radius:7px;background:#faf9fc;color:#29202d;cursor:pointer}
+.practiceDate.chosen{background:#582785;color:white;border-color:#582785;font-weight:800}
+.practiceTools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0}
+.practiceTeamOptions{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0}
+.practiceTeamOptions label{display:inline-flex;align-items:center;gap:5px;font-size:13px}
+.practiceWarning{border:1px solid #b98429;background:#fff9e9;color:#53370d;padding:12px;border-radius:8px;margin:12px 0}
+.practiceWarning div{margin-top:5px;font-size:13px}
