@@ -52,6 +52,22 @@ export default function AdminPage(){
   const [open,setOpen]=useState(false);
   const [editId,setEditId]=useState(null);
   const [form,setForm]=useState(EMPTY);
+  const [venues,setVenues]=useState([]);
+  const [homeFields,setHomeFields]=useState([]);
+  const [venueOpen,setVenueOpen]=useState(false);
+  const [venueId,setVenueId]=useState(null);
+  const [venue,setVenue]=useState({name:'',address:'',place_id:'',notes:''});
+  const [venueQuery,setVenueQuery]=useState('');
+  const [venueResults,setVenueResults]=useState([]);
+  const [venueError,setVenueError]=useState('');
+  async function loadVenues(){const r=await fetch('/api/venues');if(r.ok){const x=await r.json();setVenues(x.venues||[]);setHomeFields(x.homeFields||[])}}
+  useEffect(()=>{if(loggedIn)loadVenues()},[loggedIn]);
+  useEffect(()=>{if(!venueOpen||venueQuery.trim().length<3){setVenueResults([]);return}const c=new AbortController();const t=setTimeout(async()=>{try{const r=await fetch('/api/places/search?q='+encodeURIComponent(venueQuery),{signal:c.signal});const x=await r.json();if(!r.ok)throw Error(x.error||'Lookup failed');setVenueResults(x.results||[]);setVenueError('')}catch(e){if(e.name!=='AbortError')setVenueError(e.message)}},450);return()=>{clearTimeout(t);c.abort()}},[venueQuery,venueOpen]);
+  async function saveVenue(e){e.preventDefault();const r=await fetch(venueId?'/api/venues/'+venueId:'/api/venues',{method:venueId?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(venue)});if(!r.ok){setVenueError('Could not save venue');return}await loadVenues();setVenue({name:'',address:'',place_id:'',notes:''});setVenueId(null);setVenueQuery('');setVenueError('Venue saved')}
+  async function deleteVenue(){if(!venueId||!confirm('Delete venue?'))return;await fetch('/api/venues/'+venueId,{method:'DELETE'});await loadVenues();setVenue({name:'',address:'',place_id:'',notes:''});setVenueId(null)}
+  async function saveHomeField(team,id){const r=await fetch('/api/home-fields',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({team,venue_id:id||null})});if(r.ok)await loadVenues();else setVenueError('Unable to set home field')}
+  function homeVenue(team){const id=homeFields.find(x=>x.team===team)?.venue_id;return venues.find(x=>x.id===id)}
+  function selectVenue(id){const v=venues.find(x=>String(x.id)===String(id));if(v)setForm(f=>({...f,location:v.name,address:v.address}))}
   const [teams,setTeams]=useState([]);
   const [libraryOpen,setLibraryOpen]=useState(false);
   const blankTeam={name:'',address:'',field_address:'',field_name:'',place_id:'',notes:''};
@@ -66,7 +82,7 @@ export default function AdminPage(){
   async function saveSchool(e){e.preventDefault();const r=await fetch(schoolId?'/api/teams/'+schoolId:'/api/teams',{method:schoolId?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(school)});if(!r.ok){setMessage('Unable to save school');return}await loadTeams();setSchool(blankTeam);setSchoolId(null);setQuery('');setMessage('School saved')}
   async function deleteSchool(){if(!schoolId||!confirm('Delete saved school?'))return;await fetch('/api/teams/'+schoolId,{method:'DELETE'});await loadTeams();setSchool(blankTeam);setSchoolId(null)}
   function selectOpponent(name){const t=teams.find(x=>x.name===name);if(!t)return;setForm(f=>({...f,opponent:t.name,event_name:f.event_type==='Game'?t.name:f.event_name,...(f.home_away==='Away'?{location:t.field_name||t.name,address:t.field_address||t.address}:{})}))}
-  function selectHomeAway(v){setForm(f=>{const t=teams.find(x=>x.name===f.opponent);return {...f,home_away:v,...(v==='Home'?{location:'Carlsbad High School',address:'3557 Lancer Way, Carlsbad, CA 92008'}:v==='Away'&&t?{location:t.field_name||t.name,address:t.field_address||t.address}:{})}})}
+  function selectHomeAway(v){setForm(f=>{const t=teams.find(x=>x.name===f.opponent);const hv=homeVenue(f.team);return {...f,home_away:v,...(v==='Home'?{location:hv?.name||'Carlsbad High School',address:hv?.address||'3557 Lancer Way, Carlsbad, CA 92008'}:v==='Away'&&t?{location:t.field_name||t.name,address:t.field_address||t.address}:{})}})}
 
 
   useEffect(function(){ load(); },[]);
@@ -133,7 +149,7 @@ export default function AdminPage(){
     <div className="toolbar">
       <div className="navgroup"><button type="button" className="iconbtn" onClick={()=>setMonth(new Date(y,mo-1,1))}>‹</button><div className="monthnav">{month.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</div><button type="button" className="iconbtn" onClick={()=>setMonth(new Date(y,mo+1,1))}>›</button></div>
       <div className="filtergroup"><select value={filter} onChange={e=>setFilter(e.target.value)}>{['All','Varsity','JV','Frosh','JV/Frosh'].map(x=><option key={x} value={x}>{x}</option>)}</select></div>
-      <button type="button" className="secondary" onClick={()=>{loadTeams();setLibraryOpen(true)}}>Manage HS Teams</button><button type="button" onClick={()=>add('')}>+ Add Event</button><a className="btn secondary" href="/">Public View</a>
+      <button type="button" className="secondary" onClick={()=>{loadTeams();setLibraryOpen(true)}}>Manage HS Teams</button><button type="button" className="secondary" onClick={()=>{loadVenues();setVenueOpen(true)}}>Manage Venues</button><button type="button" onClick={()=>add('')}>+ Add Event</button><a className="btn secondary" href="/">Public View</a>
     </div>
     <div className="legend"><span><i className="dot varsity"/>Varsity</span><span><i className="dot jv"/>JV</span><span><i className="dot frosh"/>Frosh</span><span><i className="dot combo"/>JV/Frosh</span><span><i className="dot all"/>All Levels</span></div>
     {monthBanners.map(b=><div className="breakBanner" key={String(b.id)}><b>{b.title}</b><span>{b.subtitle}</span></div>)}
@@ -151,6 +167,13 @@ export default function AdminPage(){
         </div>;
       })}
     </div>
+    {venueOpen?<div className="modal" onClick={()=>setVenueOpen(false)}><div className="modalbox adminModal" onClick={e=>e.stopPropagation()}>
+      <div className="modalhead"><h2>Game Venues Library</h2><button type="button" className="closebtn" onClick={()=>setVenueOpen(false)}>×</button></div>
+      <div className="field"><label>Search any park, field, school or street address (Google Places)</label><input placeholder="Poinsettia Park, Carlsbad, CA" value={venueQuery} onChange={e=>setVenueQuery(e.target.value)}/>{venueError?<p>{venueError}</p>:null}{venueResults.map((v,i)=><button type="button" className="schoolResult" key={v.place_id||i} onClick={()=>{setVenue({name:v.name,address:v.address,place_id:v.place_id,notes:''});setVenueId(null);setVenueResults([]);setVenueQuery('')}}><strong>{v.name}</strong><small>{v.address}</small></button>)}</div>
+      <form className="grid2" onSubmit={saveVenue}>{[['name','Venue / Field Name'],['address','Full Street Address'],['notes','Notes']].map(([k,label])=><div className="field" key={k}><label>{label}</label><input value={venue[k]||''} required={k==='name'} onChange={e=>setVenue(f=>({...f,[k]:e.target.value}))}/></div>)}<div className="actions full"><button type="submit">Save Venue</button>{venueId?<button type="button" className="danger" onClick={deleteVenue}>Delete Venue</button>:null}<button type="button" className="secondary" onClick={()=>{setVenue({name:'',address:'',place_id:'',notes:''});setVenueId(null)}}>New Venue</button></div></form>
+      <h3>Default Home Fields</h3><div className="grid2">{['Varsity','JV','Frosh','JV/Frosh'].map(team=><div className="field" key={team}><label>{team}</label><select value={homeFields.find(x=>x.team===team)?.venue_id||''} onChange={e=>saveHomeField(team,e.target.value)}><option value="">Carlsbad High School (fallback)</option>{venues.map(v=><option key={v.id} value={v.id}>{v.name}</option>)}</select></div>)}</div>
+      <h3>Saved Venues ({venues.length})</h3><div className="schoolList">{venues.map(v=><button type="button" className="schoolResult" key={v.id} onClick={()=>{setVenue(v);setVenueId(v.id)}}><strong>{v.name}</strong><small>{v.address||'No address entered'}</small></button>)}</div>
+    </div></div>:null}
     {libraryOpen?<div className="modal" onClick={()=>setLibraryOpen(false)}><div className="modalbox adminModal" onClick={e=>e.stopPropagation()}>
       <div className="modalhead"><h2>High School Team Library</h2><button className="closebtn" onClick={()=>setLibraryOpen(false)}>×</button></div>
       <div className="field"><label>Search school addresses (Google Places)</label><input placeholder="Search high school name" value={query} onChange={e=>setQuery(e.target.value)}/>{lookupError?<p className="error">{lookupError}</p>:null}{results.map((t,i)=><button type="button" className="schoolResult" key={t.place_id||i} onClick={()=>{setSchool({...blankTeam,...t});setSchoolId(null);setResults([]);setQuery('')}}><strong>{t.name}</strong><small>{t.address}</small></button>)}</div>
@@ -161,8 +184,9 @@ export default function AdminPage(){
       <div className="modalhead"><div><div className="eyebrow dark">COACH ADMIN</div><h2>{editId?'Edit Event':'Add Event'}</h2></div><button type="button" className="closebtn" onClick={()=>setOpen(false)}>×</button></div>
       <form className="grid2" onSubmit={save}>
         {form.event_type==='Game'?<div className="field full"><label>Saved Opponent</label><select value={teams.some(t=>t.name===form.opponent)?form.opponent:''} onChange={e=>selectOpponent(e.target.value)}><option value="">Choose school (or type below)</option>{teams.map(t=><option key={t.id} value={t.name}>{t.name}</option>)}</select><button type="button" className="secondary" onClick={()=>{loadTeams();setLibraryOpen(true)}}>Search / Add School</button></div>:null}
+        <div className="field full"><label>Choose Saved Game Venue (optional override)</label><select value="" onChange={e=>selectVenue(e.target.value)}><option value="">Select a saved park, school or field</option>{venues.map(v=><option key={v.id} value={v.id}>{v.name} — {v.address}</option>)}</select><button type="button" className="secondary" onClick={()=>{loadVenues();setVenueOpen(true)}}>Search / Add Venue</button></div>
         {[['date','Date','date'],['time','Start / Game Time','time'],['arrival_time','Arrival Time','time'],['opponent','Opponent','text'],['event_name','Event Name','text'],['location','Location / Field','text'],['address','Address','text'],['bus_departure','Bus / Departure','text'],['uniform','Uniform','text']].map(a=><div className="field" key={a[0]}><label>{a[1]}</label><input type={a[2]} value={form[a[0]]||''} onChange={e=>setForm({...form,[a[0]]:e.target.value})} required={a[0]==='date'}/></div>)}
-        <div className="field"><label>Level</label><select value={form.team} onChange={e=>setForm({...form,team:e.target.value})}>{LEVELS.map(x=><option key={x}>{x}</option>)}</select></div>
+        <div className="field"><label>Level</label><select value={form.team} onChange={e=>setForm(f=>{const hv=homeVenue(e.target.value);return {...f,team:e.target.value,...(f.home_away==='Home'?{location:hv?.name||'Carlsbad High School',address:hv?.address||'3557 Lancer Way, Carlsbad, CA 92008'}:{})}})}>{LEVELS.map(x=><option key={x}>{x}</option>)}</select></div>
         <div className="field"><label>Event Type</label><select value={form.event_type} onChange={e=>setForm({...form,event_type:e.target.value})}>{TYPES.map(x=><option key={x}>{x}</option>)}</select></div>
         <div className="field"><label>Home / Away</label><select value={form.home_away} onChange={e=>selectHomeAway(e.target.value)}>{['Home','Away','TBD'].map(x=><option key={x}>{x}</option>)}</select></div>
         <div className="field"><label>Status</label><select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}>{['Scheduled','TBD','Changed','Canceled','Final'].map(x=><option key={x}>{x}</option>)}</select></div>
