@@ -2,24 +2,25 @@
 import {useEffect,useMemo,useState} from 'react';
 const dateKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const ym=d=>dateKey(d).slice(0,7);
-const parseMonth=s=>{const m=/^(\\d{4})-(\\d{2})$/.exec(s||'');return m?new Date(+m[1],+m[2]-1,1):null};
-const fmtTime=t=>{if(!t)return 'TBD';const m=/^(\\d{1,2}):(\\d{2})/.exec(String(t));if(!m)return String(t);let h=+m[1];return `${h%12||12}:${m[2]} ${h>=12?'PM':'AM'}`};
-const title=e=>e.event_type==='Game'?(String(e.home_away||'').toLowerCase()==='away'?'@ ':'')+String(e.opponent||e.event_name||'Game').replace(/^@\\s*/,''):(e.event_name||e.opponent||e.event_type||'Event');
+const parseMonth=s=>{const m=/^(\d{1,2})\/(\d{2}|\d{4})$/.exec((s||'').trim());if(!m)return null;const month=Number(m[1]),year=m[2].length===2?2000+Number(m[2]):Number(m[2]);return month>=1&&month<=12&&year>=2000&&year<=2099?new Date(year,month-1,1):null};
+const shortMonth=d=>`${d.getMonth()+1}/${String(d.getFullYear()).slice(-2)}`;
+const fmtTime=t=>{if(!t)return 'TBD';const m=/^(\d{1,2}):(\d{2})/.exec(String(t));if(!m)return String(t);let h=+m[1];return `${h%12||12}:${m[2]} ${h>=12?'PM':'AM'}`};
+const title=e=>e.event_type==='Game'?(String(e.home_away||'').toLowerCase()==='away'?'@ ':'')+String(e.opponent||e.event_name||'Game').replace(/^@\s*/,''):(e.event_name||e.opponent||e.event_type||'Event');
 const className=t=>String(t||'All').toLowerCase().replaceAll('/','-').replaceAll(' ','-');
 export default function PrintCalendar(){
- const now=new Date(),initial=ym(now);
+ const now=new Date(),initial=shortMonth(now);
  const [from,setFrom]=useState(initial),[to,setTo]=useState(initial),[team,setTeam]=useState('All');
  const [events,setEvents]=useState([]),[banners,setBanners]=useState([]),[error,setError]=useState(''),[loading,setLoading]=useState(true);
  useEffect(()=>{fetch('/api/events').then(async r=>{const j=await r.json();if(!r.ok||!j.events)throw Error(j.error||'Unable to load calendar');setEvents(j.events);setBanners(j.banners||[])}).catch(e=>setError(e.message)).finally(()=>setLoading(false))},[]);
  const months=useMemo(()=>{const start=parseMonth(from),end=parseMonth(to);if(!start||!end||end<start)return [];const list=[];for(let d=new Date(start),i=0;d<=end&&i<24;d.setMonth(d.getMonth()+1),i++)list.push(new Date(d));return list},[from,to]);
- const tooMany=!!parseMonth(from)&&!!parseMonth(to)&&months.length===24&&ym(months[23])!==to;
+ const tooMany=!!parseMonth(from)&&!!parseMonth(to)&&months.length===24&&months[23].getTime()!==parseMonth(to)?.getTime();
  return <main className="printApp">
   <div className="printControls">
    <h1>Carlsbad Baseball — Print Calendar</h1>
    <p>Choose a date range and team. Each month prints on its own landscape letter-size page.</p>
-   <div className="printInputs"><label>First month<input type="month" value={from} onChange={e=>setFrom(e.target.value)}/></label><label>Last month<input type="month" value={to} onChange={e=>setTo(e.target.value)}/></label><label>Team<select value={team} onChange={e=>setTeam(e.target.value)}>{['All','Varsity','JV','Frosh','JV/Frosh'].map(t=><option key={t}>{t}</option>)}</select></label><button type="button" disabled={loading||!!error||!months.length||tooMany} onClick={()=>window.print()}>Print / Save as PDF</button><a href="/">Back to Calendar</a></div>
+   <div className="printInputs"><label>First month<input type="text" inputMode="numeric" placeholder="10/26" aria-label="First month MM/YY" value={from} onChange={e=>setFrom(e.target.value)} /></label><label>Last month<input type="text" inputMode="numeric" placeholder="5/27" aria-label="Last month MM/YY" value={to} onChange={e=>setTo(e.target.value)} /></label><label>Team<select value={team} onChange={e=>setTeam(e.target.value)}>{['All','Varsity','JV','Frosh','JV/Frosh'].map(t=><option key={t}>{t}</option>)}</select></label><button type="button" disabled={loading||!!error||!months.length||tooMany} onClick={()=>window.print()}>Print / Save as PDF</button><a href="/">Back to Calendar</a></div>
    {error?<p className="printError">{error}</p>:null}{loading?<p>Loading schedule…</p>:null}
-   {!months.length||tooMany?<p className="printError">Choose an end month on or after the start month, within a 24-month range.</p>:null}
+   {!months.length||tooMany?<p className="printError">Enter months as 10/26 or 5/27. End month must be on or after start month (maximum 24 months).</p>:null}
    <p className="printHint">For best results, use Landscape, Letter paper, and enable Background graphics in your browser's print dialog.</p>
   </div>
   {months.map(month=>{const y=month.getFullYear(),m=month.getMonth(),first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate(),cells=Math.ceil((first+days)/7)*7;const key=ym(month);return <section className="printMonth" key={key}>
