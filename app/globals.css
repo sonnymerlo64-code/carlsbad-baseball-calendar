@@ -173,3 +173,5 @@
 .practiceTeamOptions label{display:inline-flex;align-items:center;gap:5px;font-size:13px}
 .practiceWarning{border:1px solid #b98429;background:#fff9e9;color:#53370d;padding:12px;border-radius:8px;margin:12px 0}
 .practiceWarning div{margin-top:5px;font-size:13px}
+
+.gameImportTable{overflow:auto;max-height:380px;margin:12px 0;border:1px solid #ddd}.gameImportTable table{border-collapse:collapse;width:100%;font-size:12px}.gameImportTable th,.gameImportTable td{padding:8px;border:1px solid #ddd;text-align:left;min-width:90px}.gameImportTable th{background:#592681;color:white;position:sticky;top:0}

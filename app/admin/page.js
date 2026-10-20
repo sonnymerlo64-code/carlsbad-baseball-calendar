@@ -52,6 +52,43 @@ export default function AdminPage(){
   const [open,setOpen]=useState(false);
   const [editId,setEditId]=useState(null);
   const [form,setForm]=useState(EMPTY);
+  const [importOpen,setImportOpen]=useState(false);
+  const [importRows,setImportRows]=useState([]);
+  const [importPreview,setImportPreview]=useState([]);
+  const [importError,setImportError]=useState('');
+  const [importBusy,setImportBusy]=useState(false);
+  const [importName,setImportName]=useState('');
+  const fields=['date','team','opponent','time','arrival_time','home_away','location','address','bus_departure','uniform','notes','status'];
+  function normalizeDate(v){
+    if(typeof v==='number'){const d=new Date(Math.round((v-25569)*86400000));return Number.isNaN(d.getTime())?'':d.toISOString().slice(0,10)}
+    const s=String(v??'').trim();if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+    const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);return m?`${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`:s;
+  }
+  async function readGameFile(file){
+    if(!file)return;setImportError('');setImportPreview([]);setImportName(file.name);
+    try{
+      const XLSX=await import('xlsx');
+      const book=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});
+      const sheet=book.Sheets[book.SheetNames[0]];
+      const records=XLSX.utils.sheet_to_json(sheet,{defval:'',raw:false});
+      const aliases={'Date':'date','Team':'team','Opponent':'opponent','Game Time':'time','Arrival Time':'arrival_time','Home/Away':'home_away','Location':'location','Address':'address','Bus Departure':'bus_departure','Uniform':'uniform','Notes':'notes','Status':'status'};
+      const rows=records.map(obj=>{const r={};for(const [k,v] of Object.entries(obj)){const f=aliases[k.trim()]||fields.includes(k.trim())&&k.trim();if(f)r[f]=String(v??'').trim()}r.date=normalizeDate(r.date);return r}).filter(r=>Object.values(r).some(Boolean));
+      if(!rows.length||rows.length>500)throw Error('Upload 1–500 rows. Use the provided template.');
+      setImportRows(rows);await previewGameRows(rows);
+    }catch(e){setImportError(e.message||'Could not read spreadsheet')}
+  }
+  async function previewGameRows(rows){
+    setImportBusy(true);
+    try{const r=await fetch('/api/games/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rows,commit:false})});const x=await r.json();if(!r.ok)throw Error(x.error||'Preview failed');setImportPreview(x.preview||[])}
+    catch(e){setImportError(e.message)}finally{setImportBusy(false)}
+  }
+  async function confirmGameImport(){
+    if(!importRows.length||importPreview.some(x=>x.errors.length))return;
+    setImportBusy(true);setImportError('');
+    try{const r=await fetch('/api/games/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rows:importRows,commit:true})});const x=await r.json();if(!r.ok){if(x.preview)setImportPreview(x.preview);throw Error(x.error||'Import failed')}await load();setImportRows([]);setImportPreview([]);setImportName('');setImportError('Imported '+x.created+' games successfully.');}
+    catch(e){setImportError(e.message)}finally{setImportBusy(false)}
+  }
+
   const [practiceOpen,setPracticeOpen]=useState(false);
   const [practiceMonth,setPracticeMonth]=useState(()=>new Date(new Date().getFullYear(),new Date().getMonth(),1));
   const [practiceDates,setPracticeDates]=useState([]);
@@ -191,7 +228,7 @@ export default function AdminPage(){
     <div className="toolbar">
       <div className="navgroup"><button type="button" className="iconbtn" onClick={()=>setMonth(new Date(y,mo-1,1))}>‹</button><div className="monthnav">{month.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</div><button type="button" className="iconbtn" onClick={()=>setMonth(new Date(y,mo+1,1))}>›</button></div>
       <div className="filtergroup"><select value={filter} onChange={e=>setFilter(e.target.value)}>{['All','Varsity','JV','Frosh','JV/Frosh'].map(x=><option key={x} value={x}>{x}</option>)}</select></div>
-      <button type="button" className="secondary" onClick={()=>{loadTeams();setLibraryOpen(true)}}>Manage HS Teams</button><button type="button" className="secondary" onClick={()=>{loadVenues();setVenueOpen(true)}}>Manage Venues</button><button type="button" className="secondary" onClick={()=>{setPracticeOpen(true);setPracticeMessage('')}}>+ Schedule Practices</button><button type="button" onClick={()=>add('')}>+ Add Event</button><a className="btn secondary" href="/">Public View</a>
+      <button type="button" className="secondary" onClick={()=>{loadTeams();setLibraryOpen(true)}}>Manage HS Teams</button><button type="button" className="secondary" onClick={()=>{loadVenues();setVenueOpen(true)}}>Manage Venues</button><button type="button" className="secondary" onClick={()=>{setPracticeOpen(true);setPracticeMessage('')}}>+ Schedule Practices</button><button type="button" className="secondary" onClick={()=>{setImportOpen(true);setImportError('')}}>Import Games</button><button type="button" onClick={()=>add('')}>+ Add Event</button><a className="btn secondary" href="/">Public View</a>
     </div>
     <div className="legend"><span><i className="dot varsity"/>Varsity</span><span><i className="dot jv"/>JV</span><span><i className="dot frosh"/>Frosh</span><span><i className="dot combo"/>JV/Frosh</span><span><i className="dot all"/>All Levels</span></div>
     {monthBanners.map(b=><div className="breakBanner" key={String(b.id)}><b>{b.title}</b><span>{b.subtitle}</span></div>)}
@@ -221,6 +258,19 @@ export default function AdminPage(){
       <div className="field"><label>Search school addresses (Google Places)</label><input placeholder="Search high school name" value={query} onChange={e=>setQuery(e.target.value)}/>{lookupError?<p className="error">{lookupError}</p>:null}{results.map((t,i)=><button type="button" className="schoolResult" key={t.place_id||i} onClick={()=>{setSchool({...blankTeam,...t});setSchoolId(null);setResults([]);setQuery('')}}><strong>{t.name}</strong><small>{t.address}</small></button>)}</div>
       <form className="grid2" onSubmit={saveSchool}>{[['name','School Name'],['address','School Address'],['field_name','Baseball Field Name'],['field_address','Baseball Field Address (override)'],['notes','Notes']].map(([k,label])=><div className="field" key={k}><label>{label}</label><input value={school[k]||''} required={k==='name'} onChange={e=>setSchool(f=>({...f,[k]:e.target.value}))}/></div>)}<div className="actions full"><button type="submit">Save School</button>{schoolId?<button type="button" className="danger" onClick={deleteSchool}>Delete School</button>:null}<button type="button" className="secondary" onClick={()=>{setSchool(blankTeam);setSchoolId(null)}}>New School</button></div></form>
       <h3>Saved Schools ({teams.length})</h3><div className="schoolList">{teams.map(t=><button type="button" className="schoolResult" key={t.id} onClick={()=>{setSchool(t);setSchoolId(t.id)}}><strong>{t.name}</strong><small>{t.field_address||t.address||'No address'}</small></button>)}</div>
+    </div></div>:null}
+    {importOpen?<div className="modal" onClick={()=>setImportOpen(false)}><div className="modalbox adminModal" onClick={e=>e.stopPropagation()}>
+      <div className="modalhead"><div><div className="eyebrow dark">COACH ADMIN</div><h2>Bulk Game Import</h2></div><button type="button" className="closebtn" onClick={()=>setImportOpen(false)}>×</button></div>
+      <p className="muted">Download the template, fill in games, then upload an Excel (.xlsx) or CSV file. Preview opponent and venue matching before importing.</p>
+      <div className="practiceTools"><a className="btn secondary" href="/Game-Import-Template.xlsx" download>Download Excel Template</a><a className="btn secondary" href="/Game-Import-Template.csv" download>Download CSV Template</a></div>
+      <div className="field"><label>Choose completed schedule</label><input type="file" accept=".xlsx,.xls,.csv" onChange={e=>readGameFile(e.target.files?.[0])}/></div>
+      {importName?<p className="muted">{importName} — {importRows.length} rows</p>:null}
+      {importError?<div role="status" className="practiceWarning">{importError}</div>:null}
+      {importBusy?<p>Checking games…</p>:null}
+      {importPreview.length?<><h3>Review before importing</h3><p className="muted">Red rows must be corrected in your spreadsheet and uploaded again. Yellow warnings indicate missing school/venue matches; you can still import after reviewing them.</p>
+        <div className="gameImportTable"><table><thead><tr><th>Row</th><th>Date</th><th>Team</th><th>Opponent</th><th>Time</th><th>Home/Away</th><th>Venue</th><th>Address</th><th>Review</th></tr></thead><tbody>{importPreview.map(r=><tr key={r.row}><td>{r.row}</td><td>{r.data.date}</td><td>{r.data.team}</td><td>{r.data.opponent}</td><td>{time12(r.data.time)}</td><td>{r.data.home_away}</td><td>{r.data.location}</td><td>{r.data.address}</td><td>{r.errors.length?<strong style={{color:'#b91c1c'}}>{r.errors.join('; ')}</strong>:r.warnings.length?<span style={{color:'#915a12'}}>{r.warnings.join('; ')}</span>:'Ready'}</td></tr>)}</tbody></table></div>
+        <div className="actions"><button type="button" disabled={importBusy||importPreview.some(r=>r.errors.length)} onClick={confirmGameImport}>Confirm Import ({importPreview.length} Games)</button><button type="button" className="secondary" onClick={()=>setImportOpen(false)}>Cancel</button></div>
+      </>:null}
     </div></div>:null}
     {practiceOpen?<div className="modal" onClick={()=>setPracticeOpen(false)}><div className="modalbox adminModal" onClick={e=>e.stopPropagation()}>
       <div className="modalhead"><div><div className="eyebrow dark">COACH ADMIN</div><h2>Flexible Practice Scheduler</h2></div><button type="button" className="closebtn" onClick={()=>setPracticeOpen(false)}>×</button></div>
