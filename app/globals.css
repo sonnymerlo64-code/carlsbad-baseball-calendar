@@ -185,3 +185,47 @@
 .bulkSelectionList label:last-child{border-bottom:0}
 .bulkChosen{outline:3px solid #8e44ad!important;outline-offset:-3px}
 .bulkCheck{font-size:18px;font-weight:bold;margin-right:4px}
+
+/* V18 — standalone month-per-page printing */
+.printApp{max-width:1150px;margin:0 auto;padding:18px;color:#1e1b22}
+.printControls{background:#fff;border:1px solid #dedbe1;border-radius:10px;padding:18px;margin-bottom:18px}
+.printControls h1{margin:0 0 8px;color:#54277d;font-size:23px}
+.printInputs{display:flex;align-items:end;gap:12px;flex-wrap:wrap}
+.printInputs label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:13px}
+.printInputs input,.printInputs select{height:38px;min-width:145px}
+.printInputs button{height:38px}
+.printError{color:#ad2020}.printHint{font-size:12px;color:#59505f}
+.printMonth{background:#fff;border:1px solid #ddd;padding:12px;margin:0 auto 18px;break-after:page;page-break-after:always}
+.printMonth:last-child{break-after:auto;page-break-after:auto}
+.printMonthHead{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.printMonthHead img{height:42px;width:42px;object-fit:contain}
+.printMonthHead h2{font-size:24px;margin:0;color:#522580}
+.printMonthHead p{font-size:10px;letter-spacing:1px;margin:2px 0}
+.printGrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-left:1px solid #aaa;border-top:1px solid #aaa}
+.printWeekday{background:#54277d;color:white;font-weight:700;text-align:center;font-size:11px;padding:7px 2px;border-right:1px solid #aaa;border-bottom:1px solid #aaa}
+.printCell{min-height:95px;overflow:hidden;padding:4px;border-right:1px solid #aaa;border-bottom:1px solid #aaa}
+.printBlank{background:#f2f0f4}.printDayNumber{display:block;font-weight:700;font-size:11px;margin-bottom:4px}
+.printEvent{border-left:3px solid #aaa;background:#f5f4f6;border-radius:2px;margin:2px 0;padding:2px 3px;font-size:9px;line-height:1.15;overflow-wrap:anywhere;break-inside:avoid}
+.printEvent span{display:block;font-size:8px}.printEvent strong{display:block;font-weight:700}
+.print-varsity{border-color:#592681;background:#eee3f7}.print-jv{border-color:#111;background:#e7e7e7}.print-frosh{border-color:#888;background:#f0f0f0}.print-jv-frosh{border-color:#555;background:#e8e8e8}.print-all{border-color:#6e478c;background:#f2eafa}
+.printBreak{font-size:8px;color:#5b287d;font-weight:700;background:#f1e8f8;padding:2px;margin-bottom:2px}
+.printFooter{font-size:9px;text-align:right;margin-top:5px;color:#555}
+@page{size:letter landscape;margin:0.28in}
+@media print{
+ html,body{background:white!important;margin:0!important;padding:0!important}
+ .printApp{max-width:none;padding:0;margin:0}
+ .printControls{display:none!important}
+ .printMonth{box-sizing:border-box;border:0;margin:0;padding:0;width:100%;height:7.85in;display:flex;flex-direction:column;overflow:hidden;break-after:page;page-break-after:always}
+ .printMonth:last-child{break-after:auto;page-break-after:auto}
+ .printMonthHead{flex:none;margin-bottom:6px}
+ .printMonthHead img{height:35px;width:35px}
+ .printMonthHead h2{font-size:21px}
+ .printGrid{flex:1;min-height:0;grid-template-rows:25px repeat(6,minmax(0,1fr))}
+ .printCell{min-height:0;padding:3px;overflow:hidden}
+ .printEvent{font-size:8px;margin:1px 0;padding:1px 2px}
+ .printEvent span{font-size:7px}
+ .printFooter{flex:none;margin-top:4px}
+ .printWeekday,.printEvent,.printBlank,.printBreak{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+
+@media print{body>header{display:none!important}.printGrid{grid-template-rows:25px repeat(6,minmax(0,1fr))}}
