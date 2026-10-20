@@ -50,6 +50,27 @@ export default function AdminPage(){
     return ()=>{clearInterval(timer);window.removeEventListener('focus',refreshToday);document.removeEventListener('visibilitychange',refreshToday)};
   },[]);
   const [filter,setFilter]=useState('All');
+  const [selectMode,setSelectMode]=useState(false);
+  const [selectedIds,setSelectedIds]=useState([]);
+  const [bulkType,setBulkType]=useState('All');
+  const [bulkFrom,setBulkFrom]=useState('');
+  const [bulkTo,setBulkTo]=useState('');
+  const [bulkBusy,setBulkBusy]=useState(false);
+  const [bulkNotice,setBulkNotice]=useState('');
+  const toggleSelected=id=>setSelectedIds(a=>a.includes(Number(id))?a.filter(x=>x!==Number(id)):[...a,Number(id)]);
+  function exitSelection(){setSelectMode(false);setSelectedIds([]);setBulkNotice('')}
+  async function deleteSelected(){
+    if(!selectedIds.length||bulkBusy)return;
+    if(!window.confirm(`Permanently delete ${selectedIds.length} selected event(s)? This cannot be undone.`))return;
+    setBulkBusy(true);setBulkNotice('');
+    try{
+      const r=await fetch('/api/events/bulk-delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ids:selectedIds})});
+      const x=await r.json();if(r.status===401){setLoggedIn(false);exitSelection();return}
+      if(!r.ok)throw Error(x.error||'Unable to delete selected events');
+      await load();setSelectedIds([]);setBulkNotice(`Deleted ${x.deleted} events.`);
+    }catch(e){setBulkNotice(e.message)}finally{setBulkBusy(false)}
+  }
+
   const [open,setOpen]=useState(false);
   const [editId,setEditId]=useState(null);
   const [form,setForm]=useState(EMPTY);
@@ -211,6 +232,9 @@ export default function AdminPage(){
   const first=new Date(y,mo,1).getDay(), count=new Date(y,mo+1,0).getDate();
   const prefix=`${y}-${String(mo+1).padStart(2,'0')}`;
   const visible=events.filter(ev=>filter==='All'||ev.team===filter||ev.team==='All');
+  const bulkEligible=visible.filter(ev=>d(ev.date).startsWith(prefix)&&(bulkType==='All'||ev.event_type===bulkType)&&(!bulkFrom||d(ev.date)>=bulkFrom)&&(!bulkTo||d(ev.date)<=bulkTo));
+  const eligibleIds=new Set(bulkEligible.map(ev=>Number(ev.id)));
+  const selectedVisible=bulkEligible.filter(ev=>selectedIds.includes(Number(ev.id)));
   const monthBanners=banners.filter(b=>d(b.start_date).slice(0,7)<=prefix&&d(b.end_date).slice(0,7)>=prefix);
 
   if(!loggedIn){
@@ -229,8 +253,16 @@ export default function AdminPage(){
     <div className="toolbar">
       <div className="navgroup"><button type="button" className="iconbtn" onClick={()=>setMonth(new Date(y,mo-1,1))}>‹</button><div className="monthnav">{month.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</div><button type="button" className="iconbtn" onClick={()=>setMonth(new Date(y,mo+1,1))}>›</button></div>
       <div className="filtergroup"><select value={filter} onChange={e=>setFilter(e.target.value)}>{['All','Varsity','JV','Frosh','JV/Frosh'].map(x=><option key={x} value={x}>{x}</option>)}</select></div>
-      <button type="button" className="secondary" onClick={()=>{loadTeams();setLibraryOpen(true)}}>Manage HS Teams</button><button type="button" className="secondary" onClick={()=>{loadVenues();setVenueOpen(true)}}>Manage Venues</button><button type="button" className="secondary" onClick={()=>{setPracticeOpen(true);setPracticeMessage('')}}>+ Schedule Practices</button><button type="button" className="secondary" onClick={()=>{setImportOpen(true);setImportError('')}}>Import Games</button><button type="button" onClick={()=>add('')}>+ Add Event</button><a className="btn secondary" href="/">Public View</a>
+      <button type="button" className="secondary" onClick={()=>{loadTeams();setLibraryOpen(true)}}>Manage HS Teams</button><button type="button" className="secondary" onClick={()=>{loadVenues();setVenueOpen(true)}}>Manage Venues</button><button type="button" className="secondary" onClick={()=>{setPracticeOpen(true);setPracticeMessage('')}}>+ Schedule Practices</button><button type="button" className="secondary" onClick={()=>{setImportOpen(true);setImportError('')}}>Import Games</button><button type="button" className="secondary" onClick={()=>selectMode?exitSelection():(setSelectMode(true),setBulkNotice(''))}>{selectMode?'Cancel Selection':'Select Events'}</button><button type="button" onClick={()=>add('')}>+ Add Event</button><a className="btn secondary" href="/">Public View</a>
     </div>
+    {selectMode?<section className="bulkPanel">
+      <div className="bulkPanelHeader"><strong>Bulk Delete Events — {selectedIds.length} selected</strong><span>Showing eligible events in {month.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</span></div>
+      <div className="bulkFilters"><label>Event type <select value={bulkType} onChange={e=>setBulkType(e.target.value)}><option value="All">All types</option>{TYPES.map(t=><option key={t} value={t}>{t}</option>)}</select></label><label>From <input type="date" value={bulkFrom} onChange={e=>setBulkFrom(e.target.value)}/></label><label>To <input type="date" value={bulkTo} onChange={e=>setBulkTo(e.target.value)}/></label></div>
+      <div className="practiceTools"><button type="button" className="secondary" onClick={()=>setSelectedIds(a=>[...new Set([...a,...bulkEligible.map(ev=>Number(ev.id))])])}>Select All Matching ({bulkEligible.length})</button><button type="button" className="secondary" onClick={()=>setSelectedIds(a=>a.filter(id=>!eligibleIds.has(id)))}>Clear Matching</button><button type="button" className="secondary" onClick={()=>setSelectedIds([])}>Clear All</button><button type="button" className="danger" disabled={!selectedIds.length||bulkBusy} onClick={deleteSelected}>{bulkBusy?'Deleting…':`Delete Selected (${selectedIds.length})`}</button></div>
+      {bulkNotice?<p role="status">{bulkNotice}</p>:null}
+      <div className="bulkSelectionList">{bulkEligible.length?bulkEligible.map(ev=><label key={ev.id}><input type="checkbox" checked={selectedIds.includes(Number(ev.id))} onChange={()=>toggleSelected(ev.id)}/><span>{d(ev.date)} · {ev.team} · {ev.event_type} · {time12(ev.time)} · {ev.event_type==='Game'?gameDisplayName(ev):(ev.event_name||ev.opponent||'Event')}</span></label>):<p>No matching events in this month.</p>}</div>
+      <p className="muted">The team filter above also applies. Selection is retained when changing months or filters until you clear it or leave selection mode.</p>
+    </section>:null}
     <div className="legend"><span><i className="dot varsity"/>Varsity</span><span><i className="dot jv"/>JV</span><span><i className="dot frosh"/>Frosh</span><span><i className="dot combo"/>JV/Frosh</span><span><i className="dot all"/>All Levels</span></div>
     {monthBanners.map(b=><div className="breakBanner" key={String(b.id)}><b>{b.title}</b><span>{b.subtitle}</span></div>)}
     <div className="calendar adminCalendar">
@@ -243,7 +275,7 @@ export default function AdminPage(){
         const isToday=ds===todayKey; return <div data-date={ds} className={`day ${dayBreaks.length?'breakday ':''}${isToday?'today':''}`} key={ds}>
           <div className="adminDayHead"><span className="num">{day}</span><button type="button" className="dayAdd" onClick={()=>add(ds)}>+</button></div>
           {dayBreaks.map(b=><div className="miniBreak" key={String(b.id)}>{b.title}</div>)}
-          {dayEvents.map(ev=><button type="button" key={String(ev.id)} onClick={()=>edit(ev)} className={`event team-${cls(ev.team)} type-${cls(ev.event_type)}`}><span className="eventteam">{ev.team}</span><span>{time12(ev.time)}</span><strong>{ev.event_type==='Game' ? gameDisplayName(ev) : (ev.event_name||ev.opponent||'Event')}</strong><em>{ev.event_type}</em></button>)}
+          {dayEvents.map(ev=><button type="button" key={String(ev.id)} onClick={()=>selectMode?toggleSelected(ev.id):edit(ev)} className={`${selectMode&&selectedIds.includes(Number(ev.id))?'bulkChosen ':''}event team-${cls(ev.team)} type-${cls(ev.event_type)}`}>{selectMode?<span className="bulkCheck">{selectedIds.includes(Number(ev.id))?'☑':'☐'}</span>:null}<span className="eventteam">{ev.team}</span><span>{time12(ev.time)}</span><strong>{ev.event_type==='Game' ? gameDisplayName(ev) : (ev.event_name||ev.opponent||'Event')}</strong><em>{ev.event_type}</em></button>)}
         </div>;
       })}
     </div>

@@ -175,3 +175,13 @@
 .practiceWarning div{margin-top:5px;font-size:13px}
 
 .gameImportTable{overflow:auto;max-height:380px;margin:12px 0;border:1px solid #ddd}.gameImportTable table{border-collapse:collapse;width:100%;font-size:12px}.gameImportTable th,.gameImportTable td{padding:8px;border:1px solid #ddd;text-align:left;min-width:90px}.gameImportTable th{background:#592681;color:white;position:sticky;top:0}
+
+.bulkPanel{border:2px solid #592681;background:#faf8fd;border-radius:12px;padding:16px;margin:16px 0}
+.bulkPanelHeader{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.bulkFilters{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.bulkFilters label{display:flex;flex-direction:column;gap:4px;font-size:13px}
+.bulkSelectionList{max-height:300px;overflow:auto;background:white;border:1px solid #ddd;border-radius:8px}
+.bulkSelectionList label{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #eee;cursor:pointer;font-size:13px}
+.bulkSelectionList label:last-child{border-bottom:0}
+.bulkChosen{outline:3px solid #8e44ad!important;outline-offset:-3px}
+.bulkCheck{font-size:18px;font-weight:bold;margin-right:4px}
