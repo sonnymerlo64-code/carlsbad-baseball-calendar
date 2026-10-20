@@ -229,3 +229,31 @@
 }
 
 @media print{body>header{display:none!important}.printGrid{grid-template-rows:25px repeat(6,minmax(0,1fr))}}
+
+/* V19: compact Coach Admin controls */
+.adminToolbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:9px}
+.adminToolbar .navgroup{flex:0 0 auto}
+.adminToolbar .monthnav{min-width:125px;font-size:13px}
+.adminToolbar .filtergroup{margin-left:0;flex:0 0 auto;width:auto}
+.adminToolbar .filtergroup select{width:auto;min-width:70px}
+.adminToolbar>button,.adminToolbar>.btn{font-size:10px;line-height:1.15;padding:8px 7px;border-radius:6px;white-space:nowrap;flex:0 0 auto}
+.adminToolbar .iconbtn{width:28px;height:30px;font-size:18px;padding:0}
+@media(max-width:850px){.adminToolbar{gap:5px}.adminToolbar>button,.adminToolbar>.btn{font-size:10px;padding:7px 6px}.adminToolbar .filtergroup{flex:0 0 auto;grid-column:auto}}
+@media(max-width:600px){.adminToolbar .navgroup{width:100%;justify-content:center}.adminToolbar .filtergroup{margin-right:auto}}
+
+/* V19: print isolation prevents site header and page overflow */
+@page{size:11in 8.5in;margin:0.25in}
+@media print{
+ body>header{display:none!important}
+ .printControls{display:none!important}
+ .printApp{padding:0!important;margin:0!important;width:100%!important;max-width:none!important}
+ .printMonth{width:100%!important;height:7.85in!important;max-height:7.85in!important;margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;break-inside:avoid!important;page-break-inside:avoid!important;break-after:page!important;page-break-after:always!important}
+ .printMonth:last-child{break-after:auto!important;page-break-after:auto!important}
+ .printMonthHead{height:0.43in!important;min-height:0!important;flex:0 0 0.43in!important;margin:0 0 0.05in!important}
+ .printMonthHead img{height:0.35in!important;width:0.35in!important}
+ .printMonthHead h2{font-size:18px!important}
+ .printMonthHead p{font-size:8px!important}
+ .printGrid{flex:1 1 auto!important;height:auto!important;min-height:0!important;grid-template-rows:0.25in repeat(var(--calendar-weeks, 6),minmax(0,1fr))!important}
+ .printCell{min-height:0!important;overflow:hidden!important}
+ .printFooter{height:0.16in!important;flex:0 0 0.16in!important;margin:0!important}
+}

@@ -2,7 +2,7 @@
 import {useEffect,useMemo,useState} from 'react';
 const dateKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const ym=d=>dateKey(d).slice(0,7);
-const parseMonth=s=>{const m=/^(\d{4})-(\d{2})$/.exec(s||'');return m?new Date(+m[1],+m[2]-1,1):null};
+const parseMonth=s=>{const m=/^(\\d{4})-(\\d{2})$/.exec(s||'');return m?new Date(+m[1],+m[2]-1,1):null};
 const fmtTime=t=>{if(!t)return 'TBD';const m=/^(\\d{1,2}):(\\d{2})/.exec(String(t));if(!m)return String(t);let h=+m[1];return `${h%12||12}:${m[2]} ${h>=12?'PM':'AM'}`};
 const title=e=>e.event_type==='Game'?(String(e.home_away||'').toLowerCase()==='away'?'@ ':'')+String(e.opponent||e.event_name||'Game').replace(/^@\\s*/,''):(e.event_name||e.opponent||e.event_type||'Event');
 const className=t=>String(t||'All').toLowerCase().replaceAll('/','-').replaceAll(' ','-');
@@ -24,7 +24,7 @@ export default function PrintCalendar(){
   </div>
   {months.map(month=>{const y=month.getFullYear(),m=month.getMonth(),first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate(),cells=Math.ceil((first+days)/7)*7;const key=ym(month);return <section className="printMonth" key={key}>
     <header className="printMonthHead"><img src="/carlsbad-logo.png" alt="Carlsbad Baseball"/><div><h2>{month.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</h2><p>CARLSBAD BASEBALL {team==='All'?'— ALL TEAMS':'— '+team.toUpperCase()}</p></div></header>
-    <div className="printGrid">{['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].map(w=><div className="printWeekday" key={w}>{w}</div>)}
+    <div className="printGrid" style={{"--calendar-weeks":cells/7}}>{['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].map(w=><div className="printWeekday" key={w}>{w}</div>)}
     {Array.from({length:cells},(_,i)=>{const day=i-first+1,active=day>=1&&day<=days,date=active?`${key}-${String(day).padStart(2,'0')}`:'';const evs=active?events.filter(e=>String(e.date||'').slice(0,10)===date&&(team==='All'||e.team===team||e.team==='All')).sort((a,b)=>String(a.time||'').localeCompare(String(b.time||''))):[];const breaks=active?banners.filter(b=>String(b.start_date||'').slice(0,10)<=date&&String(b.end_date||'').slice(0,10)>=date):[];return <div key={i} className={'printCell '+(!active?'printBlank':'')}><span className="printDayNumber">{active?day:''}</span>{breaks.map(b=><div className="printBreak" key={b.id}>{b.title}</div>)}{evs.map(e=><div className={'printEvent print-'+className(e.team)} key={e.id}><span>{e.team} · {fmtTime(e.time)}</span><strong>{title(e)}</strong></div>)}</div>})}</div>
     <footer className="printFooter">Carlsbad High School Baseball · {month.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</footer>
   </section>})}
