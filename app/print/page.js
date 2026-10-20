@@ -2,7 +2,7 @@
 import {useEffect,useMemo,useState} from 'react';
 const dateKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const ym=d=>dateKey(d).slice(0,7);
-const parseMonth=s=>{const m=/^(\\d{4})-(\\d{2})$/.exec(s||'');return m?new Date(+m[1],+m[2]-1,1):null};
+const parseMonth=s=>{const m=/^(\d{4})-(\d{2})$/.exec(s||'');return m?new Date(+m[1],+m[2]-1,1):null};
 const fmtTime=t=>{if(!t)return 'TBD';const m=/^(\\d{1,2}):(\\d{2})/.exec(String(t));if(!m)return String(t);let h=+m[1];return `${h%12||12}:${m[2]} ${h>=12?'PM':'AM'}`};
 const title=e=>e.event_type==='Game'?(String(e.home_away||'').toLowerCase()==='away'?'@ ':'')+String(e.opponent||e.event_name||'Game').replace(/^@\\s*/,''):(e.event_name||e.opponent||e.event_type||'Event');
 const className=t=>String(t||'All').toLowerCase().replaceAll('/','-').replaceAll(' ','-');
