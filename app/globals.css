@@ -269,3 +269,59 @@
  .calendar .event strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-clamp:2;white-space:normal;overflow:hidden;overflow-wrap:anywhere;word-break:normal;text-overflow:ellipsis;line-height:1.15;margin-top:2px}
  .calendar .event em{font-size:8px;margin-top:2px}
 }
+
+/* V24: calendar row geometry must not be determined by the busiest date.
+   Keep every event reachable by scrolling inside its day. */
+@media (min-width:701px) {
+  .calendar {
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    grid-template-rows:26px!important;
+    grid-auto-rows:124px!important;
+    align-items:stretch!important;
+    overflow:hidden!important;
+  }
+  .calendar>.dow {
+    min-height:0!important;
+    height:26px!important;
+    padding:5px 2px!important;
+    min-width:0!important;
+  }
+  .calendar>.day {
+    box-sizing:border-box!important;
+    min-width:0!important;
+    min-height:0!important;
+    height:124px!important;
+    max-height:124px!important;
+    padding:4px!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    scrollbar-width:thin;
+    scrollbar-color:#a49bab transparent;
+    overscroll-behavior:contain;
+  }
+  .calendar>.day::-webkit-scrollbar {width:5px}
+  .calendar>.day::-webkit-scrollbar-thumb {background:#a49bab;border-radius:4px}
+  .calendar>.day .num {position:sticky;top:-4px;z-index:1;background:white;padding:2px 0}
+  .calendar>.day .event {
+    width:100%!important;
+    min-width:0!important;
+    margin-top:3px!important;
+    padding:3px 4px!important;
+    font-size:9px!important;
+    line-height:1.12!important;
+    border-radius:3px!important;
+    overflow-wrap:anywhere!important;
+  }
+  .calendar>.day .event strong {
+    display:block!important;
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    line-height:1.12!important;
+    margin-top:2px!important;
+  }
+  .calendar>.day .event em{font-size:7px!important}
+  .calendar>.day .event span{font-size:9px!important}
+}

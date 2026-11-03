@@ -9,3 +9,9 @@
 
 ## V23 March layout fix
 The public month grid now uses shrinkable equal-width columns and clips overflowing cards, with two-line opponent names. Busy days retain all event buttons without widening columns. No database or API changes.
+
+## V24: March calendar layout correction
+
+V23 only changed text wrapping, leaving grid rows to expand based on busy dates. V24 uses a fixed 124px height for each desktop calendar week row, with 26px weekday headings. Day cells scroll internally when they have more events than can fit. This keeps every event accessible without stretching entire weeks or cutting off March 30. The same calendar CSS applies to public and Coach Admin views. No data or database changes.
+
+Test March 2027 in Safari: the five calendar week rows should be equal height. Scroll within March 8, 16, 18, 24, 26, or 30 to see all events. Mobile retains its existing compact view.
