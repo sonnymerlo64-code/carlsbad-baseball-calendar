@@ -257,3 +257,5 @@
  .printCell{min-height:0!important;overflow:hidden!important}
  .printFooter{height:0.16in!important;flex:0 0 0.16in!important;margin:0!important}
 }
+
+.schoolManageRow{display:flex;align-items:center;gap:6px;margin-bottom:6px}.schoolManageRow>.schoolResult{flex:1;min-width:0;text-align:left}.schoolManageRow>button:not(.schoolResult){flex:none;padding:7px 10px;font-size:12px}.schoolAddressHint{display:block;margin:6px 0;color:#655375;font-size:12px}
