@@ -15,3 +15,7 @@ The public month grid now uses shrinkable equal-width columns and clips overflow
 V23 only changed text wrapping, leaving grid rows to expand based on busy dates. V24 uses a fixed 124px height for each desktop calendar week row, with 26px weekday headings. Day cells scroll internally when they have more events than can fit. This keeps every event accessible without stretching entire weeks or cutting off March 30. The same calendar CSS applies to public and Coach Admin views. No data or database changes.
 
 Test March 2027 in Safari: the five calendar week rows should be equal height. Scroll within March 8, 16, 18, 24, 26, or 30 to see all events. Mobile retains its existing compact view.
+
+
+## V25 — compact month height
+Reduces the fixed 124px week rows to viewport-aware rows capped at 104px, with internal day scrolling. Keeps the final week of March 2027 in view on common desktop heights. Each event remains clickable by scrolling inside a busy date. No database changes.

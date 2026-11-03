@@ -325,3 +325,34 @@
   .calendar>.day .event em{font-size:7px!important}
   .calendar>.day .event span{font-size:9px!important}
 }
+
+/* V25: compact viewport-aware month view. Each day scrolls independently,
+   so the final week stays visible even in months with many events. */
+@media (min-width:701px) {
+ .calendar {
+   grid-auto-rows:clamp(76px, calc((100dvh - 340px) / 6), 104px)!important;
+ }
+ .calendar > .day {
+   height:auto!important;
+   max-height:none!important;
+   min-height:0!important;
+   padding:3px!important;
+   overflow-y:auto!important;
+ }
+ .calendar > .day .num {
+   font-size:10px!important;
+   line-height:13px!important;
+   padding:0 2px!important;
+ }
+ .calendar > .day .event {
+   margin-top:2px!important;
+   padding:2px 3px!important;
+   font-size:9px!important;
+   line-height:1.1!important;
+ }
+ .calendar > .day .event strong {
+   line-height:1.12!important;
+   margin-top:1px!important;
+ }
+ .calendar > .day .event em {display:none!important}
+}
