@@ -19,3 +19,7 @@ Test March 2027 in Safari: the five calendar week rows should be equal height. S
 
 ## V25 — compact month height
 Reduces the fixed 124px week rows to viewport-aware rows capped at 104px, with internal day scrolling. Keeps the final week of March 2027 in view on common desktop heights. Each event remains clickable by scrolling inside a busy date. No database changes.
+
+
+## V26 - Home screen icon
+Adds the approved purple and white calendar artwork as Apple touch icon, browser favicon and web app manifest icons. Existing header logo and database code are unchanged. Existing home screen shortcuts may need to be removed and re-added. No offline support is added.

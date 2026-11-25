@@ -1,4 +1,4 @@
 import './globals.css';
-export const metadata={title:'Carlsbad Baseball Calendar',description:'Carlsbad High School Baseball schedule'};
+export const metadata={title:'Carlsbad Baseball Calendar',description:'Carlsbad High School Baseball schedule',manifest:'/manifest.webmanifest',icons:{icon:[{url:'/favicon-32.png',sizes:'32x32',type:'image/png'},{url:'/app-icon-192.png',sizes:'192x192',type:'image/png'}],apple:[{url:'/apple-touch-icon.png',sizes:'180x180',type:'image/png'}]},appleWebApp:{capable:true,title:'CBAD Baseball',statusBarStyle:'default'}};
 function Mark(){return <img className="brandlogo" src="/carlsbad-logo.png" alt="Carlsbad Baseball logo" />}
 export default function RootLayout({children}){return <html lang="en"><body><header><div className="brand"><div className="brandleft"><Mark/><div><h1>CARLSBAD BASEBALL</h1><small>LANCERS • OFFICIAL SCHEDULE</small></div></div><div className="headerbadge">CHS</div></div></header>{children}</body></html>}
